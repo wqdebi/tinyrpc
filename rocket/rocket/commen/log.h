@@ -5,19 +5,36 @@
 #include <queue>
 #include <memory>
 #include <semaphore.h>
+#include "config.h"
+
+#define DEBUGLOG(str, ...) \
+  if (rocket::Logger::GetGlobalLogger()->getLogLevel() <= rocket::Debug) \
+  { \
+    rocket::Logger::GetGlobalLogger()->pushLog((new rocket::LogEvent(rocket::Loglevel::Debug))->toString()+ rocket::formatString(str, ##__VA_ARGS__) + "\n");\
+    rocket::Logger::GetGlobalLogger()->log();\
+  } \
 
 
-#define DEBUGLOG(str, ...)\
-    std::string msg = (new rocket::LogEvent(rocket::Loglevel::Debug)->toString()) + rocket::formatString(str, ##__VA_ARGS__);\
-    rocket::Logger::GetGlobalLogger()->pushLog(msg);\
-    recket::Logger::GetGlobalLogger()->log();
+#define INFOLOG(str, ...) \
+  if (rocket::Logger::GetGlobalLogger()->getLogLevel() <= rocket::Info) \
+  { \
+    rocket::Logger::GetGlobalLogger()->pushLog((new rocket::LogEvent(rocket::Loglevel::Info))->toString()+ rocket::formatString(str, ##__VA_ARGS__) + "\n");\
+    rocket::Logger::GetGlobalLogger()->log();\
+  } \
+
+#define ERRORLOG(str, ...) \
+  if (rocket::Logger::GetGlobalLogger()->getLogLevel() <= rocket::Error) \
+  { \
+    rocket::Logger::GetGlobalLogger()->pushLog((new rocket::LogEvent(rocket::Loglevel::Error))->toString()+ rocket::formatString(str, ##__VA_ARGS__) + "\n");\
+    rocket::Logger::GetGlobalLogger()->log();\
+  } \
 
 namespace rocket{
 
 
 
 template<typename... Args>
-std::string formatString(const char* str, Args... args){
+std::string formatString(const char* str, Args&&... args){
     int size = snprintf(nullptr, 0, str, args...);
     std::string output;
     if(size > 0){
@@ -35,13 +52,18 @@ enum Loglevel{
 };
 
 std::string LogLevelToString(Loglevel level);
-
+Loglevel StringToLogLevel(const std::string& log_level);
 class Logger{
 public:
     typedef std::shared_ptr<Logger> s_ptr;
+    Logger(Loglevel level): m_set_level(level){}
     void pushLog(const std::string& msg);
     static Logger* GetGlobalLogger();
     void log();
+    Loglevel getLogLevel()const{
+        return m_set_level; 
+    }
+    static void InitGlobalLogger();
 private:
     Loglevel m_set_level;
     std::queue<std::string> m_buffer;
@@ -57,6 +79,7 @@ public:
         return m_level;
     }
     std::string toString();
+    LogEvent(Loglevel level):m_level(level){}
 private:
     std::string m_file_name; //文件名
     int32_t m_file_line; //行号
