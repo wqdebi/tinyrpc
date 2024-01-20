@@ -8,7 +8,6 @@
 #include<stdio.h>
 #include "config.h"
 
-
 namespace rocket{
 static Logger* g_logger = nullptr;
 Logger* Logger::GetGlobalLogger(){
@@ -61,19 +60,24 @@ std::string LogEvent::toString(){
 
     ss << "[" << LogLevelToString(m_level) << "]\t"
     << "[" << time_str << "]\t"
-    << "[" << m_pid << ":" << m_thread_id << "]\t"
-    << "[" << std::string(__FILE__) << ":" << __LINE__ << "]\t"; 
+    << "[" << m_pid << ":" << m_thread_id << "]\t";
     return ss.str();
 }
 
 void Logger::pushLog(const std::string& msg ){
+    ScopeMutex<Mutex> lock(m_mutex);
     m_buffer.push(msg);
+    lock.unlock();
 }
 
 void Logger::log(){
-    while(!m_buffer.empty()){
-        std::string msg = m_buffer.front();
-        m_buffer.pop();
+    ScopeMutex<Mutex> lock(m_mutex);
+    std::queue<std::string> tmp;
+    m_buffer.swap(tmp);
+    lock.unlock();
+    while(!tmp.empty()){
+        std::string msg = tmp.front();
+        tmp.pop();
         printf(msg.c_str());
     }
 }
