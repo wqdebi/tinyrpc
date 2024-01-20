@@ -1,4 +1,3 @@
-
 #include<tinyxml/tinyxml.h>
 #include"config.h"
 #include<iostream>
