@@ -6,11 +6,13 @@
 #include <memory>
 #include <semaphore.h>
 #include "config.h"
+#include "mutex.h"
 
 #define DEBUGLOG(str, ...) \
   if (rocket::Logger::GetGlobalLogger()->getLogLevel() <= rocket::Debug) \
   { \
-    rocket::Logger::GetGlobalLogger()->pushLog((new rocket::LogEvent(rocket::Loglevel::Debug))->toString()+ rocket::formatString(str, ##__VA_ARGS__) + "\n");\
+    rocket::Logger::GetGlobalLogger()->pushLog((new rocket::LogEvent(rocket::Loglevel::Debug))->toString()\
+    + "[" + std::string(__FILE__) + ":" + std::to_string(__LINE__) + "]\t" + rocket::formatString(str, ##__VA_ARGS__) + "\n");\
     rocket::Logger::GetGlobalLogger()->log();\
   } \
 
@@ -18,14 +20,16 @@
 #define INFOLOG(str, ...) \
   if (rocket::Logger::GetGlobalLogger()->getLogLevel() <= rocket::Info) \
   { \
-    rocket::Logger::GetGlobalLogger()->pushLog((new rocket::LogEvent(rocket::Loglevel::Info))->toString()+ rocket::formatString(str, ##__VA_ARGS__) + "\n");\
+    rocket::Logger::GetGlobalLogger()->pushLog((new rocket::LogEvent(rocket::Loglevel::Info))->toString()\
+    + "[" + std::string(__FILE__) + ":" + std::to_string(__LINE__) + "]\t" + rocket::formatString(str, ##__VA_ARGS__) + "\n");\
     rocket::Logger::GetGlobalLogger()->log();\
   } \
 
 #define ERRORLOG(str, ...) \
   if (rocket::Logger::GetGlobalLogger()->getLogLevel() <= rocket::Error) \
   { \
-    rocket::Logger::GetGlobalLogger()->pushLog((new rocket::LogEvent(rocket::Loglevel::Error))->toString()+ rocket::formatString(str, ##__VA_ARGS__) + "\n");\
+    rocket::Logger::GetGlobalLogger()->pushLog((new rocket::LogEvent(rocket::Loglevel::Error))->toString()\
+    + "[" + std::string(__FILE__) + ":" + std::to_string(__LINE__) + "]\t" + rocket::formatString(str, ##__VA_ARGS__) + "\n");\
     rocket::Logger::GetGlobalLogger()->log();\
   } \
 
@@ -67,6 +71,7 @@ public:
 private:
     Loglevel m_set_level;
     std::queue<std::string> m_buffer;
+    Mutex m_mutex;
 };
 
 
@@ -87,9 +92,5 @@ private:
     int32_t m_thread_id; //线程号
     Loglevel m_level;//日志等级
 };
-
-
-
 }
-
 #endif
