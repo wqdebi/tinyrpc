@@ -36,7 +36,7 @@
 
 namespace rocket{
 static thread_local EventLoop* t_current_event = NULL;
-static int g_epoll_max_timeout = 10000;
+static int g_epoll_max_timeout = 100000;
 static int g_epoll_max_events = 10;
 EventLoop::EventLoop(){
     if(t_current_event != NULL){
@@ -51,6 +51,7 @@ EventLoop::EventLoop(){
     }
 
     initWakeUpFdEevent();
+    initTimer();
 
     INFOLOG("suss create event loop in thread %d", m_thread_id);
     t_current_event = this;
@@ -60,6 +61,10 @@ EventLoop::~EventLoop(){
     if(m_wakeup_fd_event){
         delete m_wakeup_fd_event;
         m_wakeup_fd_event = NULL;
+    }
+    if(m_timer){
+        delete m_timer;
+        m_timer = NULL;
     }
 }
 void EventLoop::loop(){
@@ -77,6 +82,9 @@ void EventLoop::loop(){
                 cb();
             } 
         }
+        //如果定时任务需要执行，那么执行
+        //如何判断定时任务如何进行
+        //arrive_time如何让eventloop监听
         int timeout = g_epoll_max_timeout;
         epoll_event result_event[g_epoll_max_events];
         DEBUGLOG("now begin to epoll_wait");
@@ -161,6 +169,13 @@ void EventLoop::initWakeUpFdEevent(){
         DEBUGLOG("read full bytes from wakeup fd[%d]", m_wakeup_fd);
     });
     addEpollEvent(m_wakeup_fd_event);
+}
+void EventLoop::addTimerEvent(TimerEvent::s_ptr event){
+    m_timer->addTimerEvent(event);
+}
+void EventLoop::initTimer(){
+    m_timer = new Timer();
+    addEpollEvent(m_timer);
 }
 
 }

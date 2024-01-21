@@ -8,6 +8,7 @@
 #include"../common/mutex.h"
 #include"wakeup_fd_event.h"
 #include"fd_event.h"
+#include"timer.h"
 
 namespace rocket{
 
@@ -22,9 +23,11 @@ public:
     void deleteEpollEvent(FdEvent* event);
     bool isInLoopThread();
     void addTask(std::function<void()> cb, bool is_wake_up=false);
+    void addTimerEvent(TimerEvent::s_ptr event);
 private:
     void dealWakeup();
     void initWakeUpFdEevent();
+    void initTimer();
 private:
     pid_t m_thread_id{0};
     std::set<int> m_listen_fds;
@@ -34,6 +37,7 @@ private:
     std::queue<std::function<void()>> m_pending_tasks;
     Mutex m_mutex;
     WakeUpFdEvent* m_wakeup_fd_event{NULL};
+    Timer *m_timer{NULL};
 };
 
 }

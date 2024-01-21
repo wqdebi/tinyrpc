@@ -5,6 +5,9 @@ namespace rocket{
 FdEvent::FdEvent(int fd): m_fd(fd){
     memset(&m_listen_events, 0, sizeof(m_listen_events));
 }
+FdEvent::FdEvent(){
+    memset(&m_listen_events, 0, sizeof(m_listen_events));
+}
 FdEvent::~FdEvent(){}
 std::function<void()> FdEvent::handler(TriggerEvent event){
     if(event == TriggerEvent::IN_EVENT){
