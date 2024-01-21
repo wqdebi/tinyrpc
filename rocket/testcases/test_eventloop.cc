@@ -8,6 +8,8 @@
 #include"../rocket/common/config.h"
 #include"../rocket/net/eventloop.h"
 #include"../rocket/net/fd_event.h"
+#include"../rocket/net/timer_event.h"
+#include<memory>
 
 int main(){
     rocket::Config::SetGlobalConfig("../conf/rocket.xml");
@@ -40,9 +42,15 @@ int main(){
     memset(&peer_addr, 0, sizeof(peer_addr));
     int clientfd = accept(listenfd, reinterpret_cast<sockaddr*>(&peer_addr), &addr_len);    
     DEBUGLOG("success get client fd[%d], peer addr: [%s:%d]", clientfd, inet_ntoa(peer_addr.sin_addr), ntohs(peer_addr.sin_port));
-
     });
     eventloop->addEpollEvent(&event);
+    int i = 0;
+    rocket::TimerEvent::s_ptr time_event = std::make_shared<rocket::TimerEvent>(
+        1000, true, [&i](){
+            INFOLOG("trigger timer event, count = %d", i++);
+        }
+    );
+    eventloop->addTimerEvent(time_event);
     eventloop->loop();
     return 0;
 }
