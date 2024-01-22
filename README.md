@@ -32,3 +32,28 @@ Logger 日志器
 1.提供打印日志方法
 2.设置日志输出路径
 ```
+
+### reactor
+reactor也叫做eventloop，本质是一个时间循环。
+
+
+### timeevent定时任务
+```
+1.指定事件，arrive_time
+2.interval,ms
+3.is_repeated
+4.is_cancled
+5.task
+```
+
+### timer
+```
+定时器，他说一个timeevent的集合
+Timer继承FdEvent
+
+addTimerEvent()
+deleteTimeEvent()
+onTimer()
+reserArriveTime()
+mutimap存储TimeEvent<key(arrivetime), TimeEvent>
+```
