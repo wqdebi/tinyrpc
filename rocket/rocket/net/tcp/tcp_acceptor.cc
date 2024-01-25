@@ -45,8 +45,14 @@ int TcpAcceptor::accept(){
         }
         IPNetAddr peer_addr(client_addr);
         INFOLOG("A client have accept succ, peer addr [%s]", peer_addr.toString().c_str());
-    }else{
+        return client_fd;
+    }//else{
         //....
-    }
+    //}
+    return 0;
+}
+
+int TcpAcceptor::getListenFd(){
+    return m_listenfd;
 }
 }

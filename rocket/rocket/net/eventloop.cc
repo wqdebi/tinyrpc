@@ -178,4 +178,12 @@ void EventLoop::initTimer(){
     addEpollEvent(m_timer);
 }
 
+EventLoop *EventLoop::GetCurrentEventLoop(){
+    if(t_current_event) {
+        return t_current_event;
+    }
+    t_current_event = new EventLoop();
+    return t_current_event;
+}
+
 }

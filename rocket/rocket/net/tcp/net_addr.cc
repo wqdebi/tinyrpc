@@ -39,7 +39,7 @@ int IPNetAddr::getFamliy(){
 }
 std::string IPNetAddr::toString(){
     std::string re;
-    re = m_ip + std::to_string(m_port);
+    re = m_ip + ":" + std::to_string(m_port);
     return re;
 }
 
