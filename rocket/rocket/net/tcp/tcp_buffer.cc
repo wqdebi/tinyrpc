@@ -37,7 +37,7 @@ void TcpBuffer::writeToBuffer(const char* buf, int size){
     m_write_index += size;
 }
 
-void TcpBuffer::readToBuffer(std::vector<char> &re, int size){
+void TcpBuffer::readFromBuffer(std::vector<char> &re, int size){
     if(readable() == 0)
         return;
     int read_size = readable() > size ? size : readable();

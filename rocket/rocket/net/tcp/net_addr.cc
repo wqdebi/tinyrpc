@@ -3,7 +3,6 @@
 #include"rocket/common/log.h"
 
 
-
 namespace rocket{
 
 IPNetAddr::IPNetAddr(const std::string& ip, uint16_t port):m_ip(ip), m_port(port){

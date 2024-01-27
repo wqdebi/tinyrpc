@@ -1,5 +1,6 @@
 #include"fd_event.h"
 #include"../common/log.h"
+#include<fcntl.h>
 #include"string.h"
 namespace rocket{
 FdEvent::FdEvent(int fd): m_fd(fd){
@@ -26,4 +27,13 @@ void FdEvent::listen(TriggerEvent event_type, std::function<void()> callback){
     }
     m_listen_events.data.ptr = this;
 }
+
+void FdEvent::setNonBlock(){
+    int flag = fcntl(m_fd, F_GETFL, 0);
+    if(flag & O_NONBLOCK){
+        return;
+    }
+    fcntl(m_fd, F_SETFL, flag | O_NONBLOCK);
+}
+
 }
