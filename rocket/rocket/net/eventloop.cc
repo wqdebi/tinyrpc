@@ -6,32 +6,36 @@
 #include<sys/eventfd.h>
 #include"string.h"
 
-#define ADD_TO_EPOLL()\
-    auto it =  m_listen_fds.find(event -> getFd());\
-    int op = EPOLL_CTL_ADD;\
-    if(it != m_listen_fds.end()){\
-        op = EPOLL_CTL_MOD;\
-    }\
-    epoll_event tmp = event -> getEpollEvent();\
-    int rt = epoll_ctl(m_epoll_fd, op, event -> getFd(), &tmp);\
-    if(rt == -1){\
-        ERRORLOG("failed epoll_ctl when add fd, errno =%d, error=%s", errno, strerror(errno));\
-    }\
-    DEBUGLOG("add event success, fd[%d]", event->getFd())\
+#define ADD_TO_EPOLL() \
+    auto it = m_listen_fds.find(event->getFd()); \
+    int op = EPOLL_CTL_ADD; \
+    if (it != m_listen_fds.end()) { \
+      op = EPOLL_CTL_MOD; \
+    } \
+    epoll_event tmp = event->getEpollEvent(); \
+    INFOLOG("epoll_event.events = %d", (int)tmp.events); \
+    int rt = epoll_ctl(m_epoll_fd, op, event->getFd(), &tmp); \
+    if (rt == -1) { \
+      ERRORLOG("failed epoll_ctl when add fd, errno=%d, error=%s", errno, strerror(errno)); \
+    } \
+    m_listen_fds.insert(event->getFd()); \
+    DEBUGLOG("add event success, fd[%d]", event->getFd()) \
 
-#define DELETE_TO_EPOLL()\
-        auto it = m_listen_fds.find(event->getFd());\
-        if(it == m_listen_fds.end()){\
-            return;\
-        }\
-        int op = EPOLL_CTL_DEL;\
-        epoll_event tmp = event->getEpollEvent();\
-        int rt = epoll_ctl(m_epoll_fd, op, event->getFd(), &tmp);\
-        if(rt == -1){\
-            ERRORLOG("failed epoll_ctl when del fd, errno=%d, error=%s", errno, strerror(errno));\
-        }\
-        m_listen_fds.erase(event->getFd()); \
-        DEBUGLOG("del event success, fd[%d]", event->getFd());\
+
+#define DELETE_TO_EPOLL() \
+    auto it = m_listen_fds.find(event->getFd()); \
+    if (it == m_listen_fds.end()) { \
+      return; \
+    } \
+    int op = EPOLL_CTL_DEL; \
+    epoll_event tmp = event->getEpollEvent(); \
+    int rt = epoll_ctl(m_epoll_fd, op, event->getFd(), &tmp); \
+    if (rt == -1) { \
+      ERRORLOG("failed epoll_ctl when add fd, errno=%d, error=%s", errno, strerror(errno)); \
+    } \
+    m_listen_fds.erase(event->getFd()); \
+    DEBUGLOG("delete event success, fd[%d]", event->getFd()); \
+
 
 
 namespace rocket{
@@ -68,6 +72,7 @@ EventLoop::~EventLoop(){
     }
 }
 void EventLoop::loop(){
+    m_is_looping = true;
     //先调用事件，防止有读写操作导致epoll返回的时候才执行
     while (!m_stop_flag)
     {
@@ -161,6 +166,7 @@ void EventLoop::initWakeUpFdEevent(){
         ERRORLOG("failed to create event loop, eventfd create error, error info [%d]", errno);
         exit(0);
     }
+    INFOLOG("wakeup fd = %d", m_wakeup_fd);
     m_wakeup_fd_event = new WakeUpFdEvent(m_wakeup_fd);
     m_wakeup_fd_event->listen(FdEvent::IN_EVENT, [this](){
         char buf[8];

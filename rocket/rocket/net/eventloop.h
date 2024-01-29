@@ -39,6 +39,7 @@ private:
     Mutex m_mutex;
     WakeUpFdEvent* m_wakeup_fd_event{NULL};
     Timer *m_timer{NULL};
+    bool m_is_looping {false};
 };
 
 }

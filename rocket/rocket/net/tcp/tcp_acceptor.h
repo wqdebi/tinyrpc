@@ -12,7 +12,7 @@ public:
 public:
     TcpAcceptor(NetAddr::s_ptr local_addr);
     ~TcpAcceptor();
-    int accept();
+    std::pair<int, NetAddr::s_ptr> accept();
     int getListenFd();
 private:
     //服务端监听地址  

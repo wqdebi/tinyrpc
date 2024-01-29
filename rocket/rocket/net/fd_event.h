@@ -17,6 +17,8 @@ public:
     void setNonBlock();
     std::function<void()> handler(TriggerEvent event_type);
     void listen(TriggerEvent event_type, std::function<void()> callback);
+    //取消监听
+    void cancle(TriggerEvent event_type);
     int getFd(){
         return m_fd;
     }
