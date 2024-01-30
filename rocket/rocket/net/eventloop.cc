@@ -109,7 +109,7 @@ void EventLoop::loop(){
                     addTask(fd_event->handler(FdEvent::IN_EVENT), true);
                 }
                 if(trigger_event.events & EPOLLOUT){
-                    addTask(fd_event->handler(FdEvent::OUT_EVENR),true);
+                    addTask(fd_event->handler(FdEvent::OUT_EVENT),true);
                     DEBUGLOG("fd %d trigger EPOLLOUT event", fd_event->getFd());
                 }
             }
@@ -190,6 +190,10 @@ EventLoop *EventLoop::GetCurrentEventLoop(){
     }
     t_current_event = new EventLoop();
     return t_current_event;
+}
+
+bool EventLoop::isLooping(){
+    return m_is_looping;
 }
 
 }

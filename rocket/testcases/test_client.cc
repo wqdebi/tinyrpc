@@ -12,6 +12,15 @@
 #include<netinet/in.h>
 #include<string>
 #include<unistd.h>
+#include"rocket/common/log.h"
+#include"rocket/net/tcp/tcp_client.h"
+#include"../rocket/common/log.h"
+#include"../rocket/net/tcp/net_addr.h"
+#include<iostream>
+#include"rocket/net/tcp/tcp_server.h"
+#include<memory>
+#include"rocket/net/string_coder.h"
+#include"rocket/net/abstract_protocol.h"
 
 void test_connect(){
     int fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -34,12 +43,29 @@ void test_connect(){
     rt = read(fd, buf, 100);
     DEBUGLOG("success read %d bytes, [%s]",rt, std::string(buf).c_str());
 }
-
+void test_tcp_client(){
+    rocket::IPNetAddr::s_ptr addr = std::make_shared<rocket::IPNetAddr>("127.0.0.1", 12345);
+    rocket::TcpClient client(addr);
+    client.connect([addr, &client](){
+        DEBUGLOG("connect to [%s] success", addr->toString().c_str());
+        std::shared_ptr<rocket::StringProtocol> message = std::make_shared<rocket::StringProtocol>();
+        message->info = "Hello Rocker";
+        std::string a = std::string("123456");
+        message->setReqId(a);
+        client.writeMessage(message, [](rocket::AbstractProtocol::s_ptr msg_ptr){
+            DEBUGLOG("send message success");
+        });
+        client.readMessage("123456", [](rocket::AbstractProtocol::s_ptr msg_ptr){
+            std::shared_ptr<rocket::StringProtocol> message = std::dynamic_pointer_cast<rocket::StringProtocol>(msg_ptr);
+            DEBUGLOG("req_id[%s], get response %s",message->getReqId().c_str(), message->info.c_str());
+        });
+    });
+}
 int main()
 {
     rocket::Config::SetGlobalConfig("../conf/rocket.xml");
     rocket::Logger::InitGlobalLogger();
-    test_connect();
+    test_tcp_client();
     return 0;
     
 }

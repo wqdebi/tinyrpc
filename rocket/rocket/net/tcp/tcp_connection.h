@@ -5,6 +5,8 @@
 #include"rocket/net/tcp/tcp_buffer.h"
 #include"rocket/net/io_thread.h"
 #include<memory>
+#include<queue>
+#include"rocket/net/abstract_coder.h"
 
 namespace rocket{
 
@@ -15,11 +17,16 @@ enum TcpState{
         Closed = 4,
 };
 
+enum TcpConnectionType{
+    TcpConnectionByServer = 1,//服务端使用
+    TcpConnectionByClient = 2,//客户端使用
+};
+
 class TcpConnection{
 public:
     typedef std::shared_ptr<TcpConnection> s_ptr;
 public:
-    TcpConnection(IOThread *io_thread, int fd, int buffer_size, NetAddr::s_ptr peer_addr);
+    TcpConnection(EventLoop *event_loop, int fd, int buffer_size, NetAddr::s_ptr peer_addr, TcpConnectionType type = TcpConnectionByServer);
     ~TcpConnection();
     void onRead();
     void excute();
@@ -28,8 +35,13 @@ public:
     TcpState getState();
     void clear();
     void shutdown();
+    void setConnetctionType(TcpConnectionType type);
+    void listenWrite();
+    void listenRead();
+    void pushSendMessage(AbstractProtocol::s_ptr message, std::function<void(AbstractProtocol::s_ptr)> done);
+    void pushReadMessage(const std::string& req_id, std::function<void(AbstractProtocol::s_ptr)> done);
 private:
-    IOThread* m_io_thread{NULL};
+    EventLoop *m_event_loop{NULL};
     NetAddr::s_ptr m_locak_addr;
     NetAddr::s_ptr m_peer_addr;
     TcpBuffer::s_ptr m_in_buffer;
@@ -37,6 +49,10 @@ private:
     FdEvent *m_fd_event{NULL};
     TcpState m_state;
     int m_fd{0};
+    TcpConnectionType m_connetction_type{TcpConnectionByServer};
+    std::vector<std::pair<AbstractProtocol::s_ptr, std::function<void(AbstractProtocol::s_ptr)>>> m_write_dones;
+    std::map<std::string, std::function<void(AbstractProtocol::s_ptr)>> m_read_dones;
+    AbstractCoder* m_coder{NULL};
 };
 
 }

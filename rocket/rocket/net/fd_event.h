@@ -9,7 +9,7 @@ class FdEvent{
 public:
     enum TriggerEvent{
         IN_EVENT = EPOLLIN,
-        OUT_EVENR = EPOLLOUT
+        OUT_EVENT = EPOLLOUT
     };
     FdEvent(int fd);
     FdEvent();
