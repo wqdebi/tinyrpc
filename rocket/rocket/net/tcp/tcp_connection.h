@@ -6,7 +6,8 @@
 #include"rocket/net/io_thread.h"
 #include<memory>
 #include<queue>
-#include"rocket/net/abstract_coder.h"
+#include"rocket/net/coder/abstract_coder.h"
+#include"rocket/net/rpc/rpc_dispatcher.h"
 
 namespace rocket{
 
@@ -53,6 +54,7 @@ private:
     std::vector<std::pair<AbstractProtocol::s_ptr, std::function<void(AbstractProtocol::s_ptr)>>> m_write_dones;
     std::map<std::string, std::function<void(AbstractProtocol::s_ptr)>> m_read_dones;
     AbstractCoder* m_coder{NULL};
+    std::shared_ptr<RpcDispatcher> m_dispatcher;
 };
 
 }

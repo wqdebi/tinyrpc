@@ -23,7 +23,7 @@ void FdEvent::listen(TriggerEvent event_type, std::function<void()> callback){
         m_read_callback = callback;
     }else{
         m_listen_events.events |= EPOLLOUT;
-        m_read_callback = callback;
+        m_write_callback = callback;
     }
     m_listen_events.data.ptr = this;
 }

@@ -2,7 +2,8 @@
 #include "rocket/net/fd_event_group.h"
 #include"rocket/common/log.h"
 #include<unistd.h>
-#include"rocket/net/string_coder.h"
+#include"rocket/net/coder/string_coder.h"
+#include"rocket/net/coder/tinypb_coder.h"
 
 namespace rocket{
 
@@ -13,9 +14,9 @@ TcpConnection::TcpConnection(EventLoop *event_loop, int fd, int buffer_size, Net
     m_out_buffer = std::make_shared<TcpBuffer>(buffer_size);
     m_fd_event = FdEventGroup::GetFdEventGroup()->getFdEvent(fd);
     m_fd_event->setNonBlock();
-    listenRead();
+    m_coder = new TinyPBCoder();
     if(m_connetction_type == TcpConnectionByServer){
-        m_coder = new StringCoder();
+        listenRead();
     }
     
 }
@@ -37,10 +38,10 @@ void TcpConnection::onRead(){
     bool is_read_all = false;
     bool is_close = false;
     while(!is_read_all){
-        if(m_in_buffer->writeable() == 0){
+        if(m_in_buffer->writeAble() == 0){
             m_in_buffer->resizeBuffer(2 * m_in_buffer->m_buffer.size());
         }
-        int read_count = m_in_buffer->writeable();
+        int read_count = m_in_buffer->writeAble();
         int write_count = m_in_buffer->writeIndex();
         int rt = read(m_fd, &(m_in_buffer->m_buffer[write_count]), read_count);
         DEBUGLOG("success read %d bytes from addr[%s], client fd[%d]", rt, m_peer_addr->toString().c_str(), m_fd);
@@ -76,25 +77,23 @@ void TcpConnection::onRead(){
 void TcpConnection::excute(){
     if(m_connetction_type == TcpConnectionByServer){
         //将RPC请求执行业务逻辑，获取RPC相应，在不RPC相应发送回去
-        std::vector<char> tmp;
-        int size = m_in_buffer->readable();
-        tmp.resize(size);
-        m_in_buffer->readFromBuffer(tmp, size);
-
-        std::string msg;
-        for(size_t i = 0; i < tmp.size(); ++i){
-            msg += tmp[i];  
+        std::vector<AbstractProtocol::s_ptr> result;
+        std::vector<AbstractProtocol::s_ptr> replay_messages;
+        m_coder->decode(result, m_in_buffer);
+        for(size_t i = 0; i < result.size(); ++i){
+            INFOLOG("success get request[%s] from client[%s]", result[i]->m_msg_id.c_str(), m_peer_addr->toString().c_str());
+            std::shared_ptr<TinyPBProtocol> message = std::make_shared<TinyPBProtocol>();
+            message->m_pb_data = "hello, this is rocket rpc test data";
+            message->m_msg_id = result[i]->m_msg_id;
+            replay_messages.emplace_back(message);
         }
-
-        INFOLOG("success get request[%s] from client[%s]", msg.c_str(), m_peer_addr->toString().c_str());
-
-        m_out_buffer->writeToBuffer(msg.c_str(), msg.length());
+        m_coder->encode(replay_messages, m_out_buffer);
         listenWrite();
     }else{
         std::vector<AbstractProtocol::s_ptr> result;
         m_coder->decode(result, m_in_buffer);
         for(size_t i = 0; i < result.size(); ++i){
-            std::string req_id = result[i]->getReqId();
+            std::string req_id = result[i]->m_msg_id;
             auto it = m_read_dones.find(req_id);
             if(it != m_read_dones.end()){
                 it->second(result[i]);
@@ -120,13 +119,13 @@ void TcpConnection::onWrite(){
 
     bool is_write_all = false;
     while(true){
-        if(m_out_buffer->readable() == 0){
+        if(m_out_buffer->readAble() == 0){
             DEBUGLOG("no data need to send to client [%s]", m_peer_addr->toString().c_str());
             is_write_all = true;
             break;
         }
         
-        int write_size = m_out_buffer->readable();
+        int write_size = m_out_buffer->readAble();
         int read_size = m_out_buffer->readIndex();
         int rt = write(m_fd, &(m_out_buffer->m_buffer[read_size]), write_size);
         if(rt >= write_size){

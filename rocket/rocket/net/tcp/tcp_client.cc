@@ -11,7 +11,7 @@ namespace rocket{
 
 TcpClient::TcpClient(NetAddr::s_ptr peer_addr): m_peer_addr(peer_addr){
     m_event_loop = EventLoop::GetCurrentEventLoop();
-    m_fd = socket(peer_addr->getFamliy(), SOCK_STREAM, 0);
+    m_fd = socket(peer_addr->getFamily(), SOCK_STREAM, 0);
     if(m_fd < 0){
         ERRORLOG("TcpClient::TcpClient() error, failed to  create fd");
         return;
