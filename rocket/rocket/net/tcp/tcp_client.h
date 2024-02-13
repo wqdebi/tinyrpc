@@ -15,7 +15,6 @@ class TcpClient {
  public:
   typedef std::shared_ptr<TcpClient> s_ptr;
 
-
   TcpClient(NetAddr::s_ptr peer_addr);
 
   ~TcpClient();
@@ -43,11 +42,10 @@ class TcpClient {
 
   NetAddr::s_ptr getLocalAddr();
 
-
+  void initLocalAddr();
 
   void addTimerEvent(TimerEvent::s_ptr timer_event);
 
-  void initLocalAddr();
 
  private:
   NetAddr::s_ptr m_peer_addr;

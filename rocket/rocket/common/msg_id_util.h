@@ -1,15 +1,19 @@
-#ifndef ROCKET_COMMOM_MSG_UTIL_H
-#define ROCKET_COMMOM_MSG_UTIL_H
+#ifndef ROCKET_COMMON_MSGID_UTIL_H
+#define ROCKET_COMMON_MSGID_UTIL_H
 
-#include<string>
+#include <string>
 
-namespace rocket{
 
-class MsgIDUtil{
-public:
-    static std::string GenMsgID();
+namespace rocket {
+
+class MsgIDUtil {
+
+ public:
+  static std::string GenMsgID();
+
 };
 
 }
+
 
 #endif
